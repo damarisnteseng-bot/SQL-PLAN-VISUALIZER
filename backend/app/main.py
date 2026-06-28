@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app.db import get_connection
+from app.analyzer.rules import analyze_plan
 
 app = FastAPI()
 
@@ -28,7 +29,8 @@ def analyze_query(request: QueryRequest):
     try:
         cur.execute(f"EXPLAIN (ANALYZE, FORMAT JSON) {request.sql}")
         result = cur.fetchone()[0]
-        return {"plan": result}
+        issues = analyze_plan(result)
+        return {"plan": result, "issues": issues}
     except Exception as e:
         return {"error": str(e)}
     finally:
