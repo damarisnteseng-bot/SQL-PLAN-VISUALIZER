@@ -5,12 +5,16 @@ def analyze_plan(plan_json):
     """
     issues = []
     root_plan = plan_json[0]["Plan"]
-    _walk_node(root_plan, issues)
+    _walk_node(root_plan, issues, under_limit=False)
     return issues
 
 
-def _walk_node(node, issues):
+def _walk_node(node, issues, under_limit):
     node_type = node.get("Node Type", "")
+
+    # If this node is a Limit, everything below it ran under a truncated result set
+    is_limit_node = (node_type == "Limit")
+    child_under_limit = under_limit or is_limit_node
 
     # 1. Sequential scan on a table with many rows
     if node_type == "Seq Scan":
@@ -47,22 +51,25 @@ def _walk_node(node, issues):
                 )
             })
 
-    # 2. Bad row estimates (planner guessed very wrong)
-    estimated_rows = node.get("Plan Rows", 0)
-    actual_rows = node.get("Actual Rows", 0)
-    if estimated_rows > 0 and actual_rows > 0:
-        ratio = actual_rows / estimated_rows
-        if ratio > 10 or ratio < 0.1:
-            issues.append({
-                "severity": "medium",
-                "type": "bad_row_estimate",
-                "table": node.get("Relation Name", "unknown"),
-                "message": (
-                    f"Planner estimated {estimated_rows} rows but got {actual_rows} actual rows "
-                    f"on '{node.get('Node Type')}'. This usually means table statistics are stale — "
-                    f"try running ANALYZE on this table."
-                )
-            })
+    # 2. Bad row estimates (planner guessed very wrong) — skip if a LIMIT
+    # anywhere above this node could have cut execution short, since that
+    # makes "Actual Rows" reflect a truncated result, not a true estimate miss.
+    if not under_limit:
+        estimated_rows = node.get("Plan Rows", 0)
+        actual_rows = node.get("Actual Rows", 0)
+        if estimated_rows > 0 and actual_rows > 0:
+            ratio = actual_rows / estimated_rows
+            if ratio > 10 or ratio < 0.1:
+                issues.append({
+                    "severity": "medium",
+                    "type": "bad_row_estimate",
+                    "table": node.get("Relation Name", "unknown"),
+                    "message": (
+                        f"Planner estimated {estimated_rows} rows but got {actual_rows} actual rows "
+                        f"on '{node.get('Node Type')}'. This usually means table statistics are stale — "
+                        f"try running ANALYZE on this table."
+                    )
+                })
 
     # 3. Nested loop joins on large row counts
     if node_type == "Nested Loop":
@@ -80,6 +87,6 @@ def _walk_node(node, issues):
                 )
             })
 
-    # Recurse into child plan nodes
+    # Recurse into child plan nodes, passing down whether we're under a Limit
     for child in node.get("Plans", []):
-        _walk_node(child, issues)
+        _walk_node(child, issues, child_under_limit)
