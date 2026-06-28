@@ -1,3 +1,6 @@
+import re
+
+
 def analyze_plan(plan_json):
     """
     Walks through a Postgres EXPLAIN (ANALYZE, FORMAT JSON) result
@@ -9,10 +12,43 @@ def analyze_plan(plan_json):
     return issues
 
 
+def _extract_columns_from_filter(filter_text):
+    """
+    Pulls likely column names out of a Postgres filter expression like
+    "(order_id = 12345)" or "((order_status)::text = 'pending'::text)".
+    This is a simple heuristic, not a full SQL parser -- it looks for
+    identifiers that appear on the left-hand side of a comparison.
+    """
+    if not filter_text:
+        return []
+
+    # Remove type casts like ::text, ::int, etc.
+    cleaned = re.sub(r"::\w+", "", filter_text)
+
+    # Find patterns like "column_name OPERATOR" (=, >, <, >=, <=, <>)
+    matches = re.findall(r"([a-zA-Z_][a-zA-Z0-9_]*)\s*(?:=|>|<|>=|<=|<>)", cleaned)
+
+    # Remove duplicates while preserving order
+    seen = set()
+    columns = []
+    for m in matches:
+        if m not in seen:
+            seen.add(m)
+            columns.append(m)
+    return columns
+
+
+def _suggest_index(table, columns):
+    if not table or table == "unknown" or not columns:
+        return None
+    col_list = ", ".join(columns)
+    index_name = f"idx_{table}_{'_'.join(columns)}"
+    return f"CREATE INDEX {index_name} ON {table}({col_list});"
+
+
 def _walk_node(node, issues, under_limit):
     node_type = node.get("Node Type", "")
 
-    # If this node is a Limit, everything below it ran under a truncated result set
     is_limit_node = (node_type == "Limit")
     child_under_limit = under_limit or is_limit_node
 
@@ -27,17 +63,24 @@ def _walk_node(node, issues, under_limit):
             waste_ratio = rows_removed / total_rows_scanned if total_rows_scanned > 0 else 0
 
             if waste_ratio > 0.5:
-                issues.append({
+                table = node.get("Relation Name", "unknown")
+                columns = _extract_columns_from_filter(node.get("Filter", ""))
+                suggested_sql = _suggest_index(table, columns)
+
+                issue = {
                     "severity": "high" if total_rows_scanned > 50000 else "medium",
                     "type": "sequential_scan",
-                    "table": node.get("Relation Name", "unknown"),
+                    "table": table,
                     "message": (
-                        f"Sequential scan on '{node.get('Relation Name', 'unknown')}' "
+                        f"Sequential scan on '{table}' "
                         f"scanned {total_rows_scanned} rows but discarded {rows_removed} of them "
                         f"({waste_ratio:.0%} wasted) to find {actual_rows} matches via filter "
                         f"\"{node.get('Filter')}\". Consider adding an index on the filtered column(s)."
                     )
-                })
+                }
+                if suggested_sql:
+                    issue["suggested_index"] = suggested_sql
+                issues.append(issue)
         elif not has_filter and total_rows_scanned > 50000:
             issues.append({
                 "severity": "low",
@@ -51,9 +94,7 @@ def _walk_node(node, issues, under_limit):
                 )
             })
 
-    # 2. Bad row estimates (planner guessed very wrong) — skip if a LIMIT
-    # anywhere above this node could have cut execution short, since that
-    # makes "Actual Rows" reflect a truncated result, not a true estimate miss.
+    # 2. Bad row estimates (planner guessed very wrong) — skip under a LIMIT
     if not under_limit:
         estimated_rows = node.get("Plan Rows", 0)
         actual_rows = node.get("Actual Rows", 0)
@@ -87,6 +128,5 @@ def _walk_node(node, issues, under_limit):
                 )
             })
 
-    # Recurse into child plan nodes, passing down whether we're under a Limit
     for child in node.get("Plans", []):
         _walk_node(child, issues, child_under_limit)
