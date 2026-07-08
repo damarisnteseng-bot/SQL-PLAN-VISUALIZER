@@ -6,10 +6,13 @@ from app.analyzer.rules import analyze_plan
 
 app = FastAPI()
 
-# Allows your future React frontend (running on a different port) to call this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://sql-plan-visualizer-blond.vercel.app",
+        "https://*.vercel.app"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
