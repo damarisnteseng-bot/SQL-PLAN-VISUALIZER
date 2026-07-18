@@ -10,7 +10,7 @@ function severityColor(severity) {
 }
 
 function App() {
-  const [sql, setSql] = useState('SELECT * FROM order_items WHERE order_id = 12345')
+  const [sql, setSql] = useState("SELECT * FROM orders WHERE order_status = 'pending'")
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
