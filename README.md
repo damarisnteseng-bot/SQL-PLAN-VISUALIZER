@@ -134,3 +134,9 @@ PostgreSQL estimates row counts for the full result set, but LIMIT cuts executio
 ---
 
 *Built by Damaris Nteseng — Software Development student, Pretoria, South Africa*
+
+## Live Demo
+
+**Frontend:** https://sql-plan-visualizer-blond.vercel.app
+
+**API:** https://sql-plan-visualizer-production.up.railway.app
