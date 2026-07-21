@@ -140,3 +140,16 @@ PostgreSQL estimates row counts for the full result set, but LIMIT cuts executio
 **Frontend:** https://sql-plan-visualizer-blond.vercel.app
 
 **API:** https://sql-plan-visualizer-production.up.railway.app
+
+## Running the Tests
+
+The analyzer rules have a unit test suite covering all detection logic and edge cases:
+
+    cd backend
+    python3 tests/test_rules.py
+
+All 7 tests pass, covering:
+- Sequential scan detection (filtered vs unfiltered, size thresholds)
+- Bad row estimate detection with LIMIT edge case fix
+- Expensive nested loop detection
+- Clean index scan producing zero false positives
