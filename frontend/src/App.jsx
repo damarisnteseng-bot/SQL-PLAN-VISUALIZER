@@ -60,7 +60,7 @@ function App() {
       />
 
       <button onClick={handleAnalyze} disabled={loading} className="analyze-btn">
-        {loading ? 'Analyzing...' : 'Analyze Query'}
+        {loading ? (<><span className="spinner"></span>Analyzing...</>) : "Analyze Query"}
       </button>
 
       {error && (
