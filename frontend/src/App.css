@@ -166,3 +166,31 @@ h1 {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+.plan-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+}
+
+.summary-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 2px;
+  letter-spacing: 0.05em;
+}
+
+.index-used {
+  color: #16a34a;
+}

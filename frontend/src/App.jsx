@@ -9,6 +9,18 @@ function severityColor(severity) {
   return '#6b7280'
 }
 
+function getPlanSummary(plan) {
+  const root = plan[0]?.Plan
+  if (!root) return null
+  return {
+    nodeType: root['Node Type'],
+    executionTime: plan[0]['Execution Time'],
+    planningTime: plan[0]['Planning Time'],
+    actualRows: root['Actual Rows'],
+    indexName: root['Index Name'] || null,
+  }
+}
+
 function App() {
   const [sql, setSql] = useState("SELECT * FROM orders WHERE order_status = 'pending'")
   const [loading, setLoading] = useState(false)
@@ -44,6 +56,8 @@ function App() {
     navigator.clipboard.writeText(text)
   }
 
+  const summary = result ? getPlanSummary(result.plan) : null
+
   return (
     <div className="app">
       <h1>SQL Query Plan Visualizer</h1>
@@ -69,24 +83,49 @@ function App() {
         </div>
       )}
 
-      {result && (
+      {result && summary && (
         <div className="results">
-          <div className="execution-time">
-            Execution time: <strong>{result.plan[0]['Execution Time']?.toFixed(2)} ms</strong>
+          <div className="plan-summary">
+            <div className="summary-item">
+              <span className="summary-label">Execution time</span>
+              <strong>{summary.executionTime?.toFixed(2)} ms</strong>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Planning time</span>
+              <strong>{summary.planningTime?.toFixed(2)} ms</strong>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Rows returned</span>
+              <strong>{summary.actualRows?.toLocaleString()}</strong>
+            </div>
+            <div className="summary-item">
+              <span className="summary-label">Scan type</span>
+              <strong>{summary.nodeType}</strong>
+            </div>
+            {summary.indexName && (
+              <div className="summary-item">
+                <span className="summary-label">Index used</span>
+                <strong className="index-used">{summary.indexName}</strong>
+              </div>
+            )}
           </div>
 
           <h2>Issues Found ({result.issues.length})</h2>
           {result.issues.length === 0 && (
-            <p className="no-issues">No issues detected. This query looks efficient.</p>
+            <p className="no-issues">
+              ✓ No issues detected.
+              {summary.indexName
+                ? ` Query used index "${summary.indexName}" efficiently.`
+                : summary.nodeType === 'Seq Scan'
+                ? ' Full table scan — acceptable if no filter was applied.'
+                : ' This query looks efficient.'}
+            </p>
           )}
 
           {result.issues.map((issue, idx) => (
             <div key={idx} className="issue-card" style={{ borderLeftColor: severityColor(issue.severity) }}>
               <div className="issue-header">
-                <span
-                  className="severity-badge"
-                  style={{ backgroundColor: severityColor(issue.severity) }}
-                >
+                <span className="severity-badge" style={{ backgroundColor: severityColor(issue.severity) }}>
                   {issue.severity}
                 </span>
                 <span className="issue-type">{issue.type}</span>
@@ -95,10 +134,7 @@ function App() {
               {issue.suggested_index && (
                 <div className="suggested-index">
                   <code>{issue.suggested_index}</code>
-                  <button
-                    className="copy-btn"
-                    onClick={() => copyToClipboard(issue.suggested_index)}
-                  >
+                  <button className="copy-btn" onClick={() => copyToClipboard(issue.suggested_index)}>
                     Copy
                   </button>
                 </div>
