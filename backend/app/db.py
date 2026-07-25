@@ -12,3 +12,4 @@ def get_connection():
         user="visualizer",
         password="localdevpassword"
     )
+    
