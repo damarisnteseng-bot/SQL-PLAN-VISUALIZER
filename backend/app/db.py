@@ -12,4 +12,10 @@ def get_connection():
         user="visualizer",
         password="localdevpassword"
     )
+
+import json
+
+def process_data(x, y, z, a, b, c, d, e, f):
+    result = x + y
+    return result
     
