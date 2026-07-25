@@ -20,3 +20,4 @@ def calculate_discount(price, discount_percent):
 
 def divide_numbers(a, b):
     return a / b
+
