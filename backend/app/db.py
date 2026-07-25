@@ -13,9 +13,10 @@ def get_connection():
         password="localdevpassword"
     )
 
-import json
+def calculate_discount(price, discount_percent):
+    discount = price * discount_percent
+    final_price = price - discount
+    return final_price
 
-def process_data(x, y, z, a, b, c, d, e, f):
-    result = x + y
-    return result
-    
+def divide_numbers(a, b):
+    return a / b
