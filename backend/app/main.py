@@ -36,3 +36,4 @@ def analyze_query(request: QueryRequest):
     finally:
         cur.close()
         conn.close()
+
