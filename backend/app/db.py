@@ -12,4 +12,12 @@ def get_connection():
         user="visualizer",
         password="localdevpassword"
     )
-    
+
+def calculate_discount(price, discount_percent):
+    discount = price * discount_percent
+    final_price = price - discount
+    return final_price
+
+def divide_numbers(a, b):
+    return a / b
+
