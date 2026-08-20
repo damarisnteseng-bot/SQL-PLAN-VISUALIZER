@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 
-const API_URL = 'https://sql-plan-visualizer-production.up.railway.app'
+const API_URL = 'http://127.0.0.1:8000'
 
 function severityColor(severity) {
   if (severity === 'high') return '#dc2626'
