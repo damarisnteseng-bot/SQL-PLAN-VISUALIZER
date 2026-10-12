@@ -1,6 +1,6 @@
 # SQL Query Plan Visualizer & Optimizer Advisor
 
-A full-stack tool that takes any SQL query, runs it through PostgreSQL's query planner, and automatically detects performance anti-patterns — returning specific, actionable index suggestions to fix them.
+A full-stack tool that takes any SQL query, runs it through PostgreSQL's query planner, and automatically detects performance anti-patterns returning specific, actionable index suggestions to fix them.
 
 Built as a portfolio project to demonstrate systems thinking, backend engineering, and applied database knowledge.
 
