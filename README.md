@@ -8,7 +8,7 @@ Built as a portfolio project to demonstrate systems thinking, backend engineerin
 
 ## The Problem
 
-Most developers write SQL that "works" but never look at how the database actually executes it. A query that's fast on 1,000 rows can fall over at 500,000 rows — and the difference is almost always visible in the execution plan, if you know how to read one.
+Most developers write SQL that "works" but never look at how the database actually executes it. A query that's fast on 1,000 rows can fall over at 500,000 rows and the difference is almost always visible in the execution plan, if you know how to read one.
 
 This tool makes that invisible step visual and automatic.
 
