@@ -139,7 +139,7 @@ PostgreSQL estimates row counts for the full result set, but LIMIT cuts executio
 
 **Frontend:** https://sql-plan-visualizer-blond.vercel.app
 
-**API:** https://sql-plan-visualizer-production.up.railway.app
+**API:** https://sql-plan-visualizer-nwcr.vercel.app
 
 ## Running the Tests
 
@@ -153,3 +153,10 @@ All 7 tests pass, covering:
 - Bad row estimate detection with LIMIT edge case fix
 - Expensive nested loop detection
 - Clean index scan producing zero false positives
+
+## Hosting
+
+- Frontend: React app on Vercel
+- Backend: FastAPI on Vercel (serverless), so the first request after a quiet period may take a few seconds (cold start)
+- Database: PostgreSQL on Neon, seeded with 100,000 orders and 100,000 order items
+- Local development: run the database with Docker Compose, and point `API_URL` in `frontend/src/App.jsx` at `http://127.0.0.1:8000`
