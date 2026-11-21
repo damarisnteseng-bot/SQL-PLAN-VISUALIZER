@@ -48,7 +48,7 @@ That's a ~110x speedup from a single index the tool suggested automatically.
 | Database | PostgreSQL 16 (Docker) | Industry standard, excellent EXPLAIN ANALYZE JSON output |
 | Backend | Python + FastAPI | Fast to write, clean async API, great for JSON-heavy work |
 | Frontend | React + Vite | Modern, fast dev experience, component-based UI |
-| Data generation | Python + Faker | Realistic seed data at scale (700K+ rows) |
+| Data generation | Python + Faker | Realistic seed data at scale (700K+ rows locally, 200K+ rows on the hosted demo) |
 | Containerization | Docker + docker-compose | Reproducible, portable database setup |
 | Version control | Git + GitHub | Full commit history showing incremental build |
 
