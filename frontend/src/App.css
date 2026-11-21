@@ -194,3 +194,81 @@ h1 {
 .index-used {
   color: #16a34a;
 }
+
+
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.examples-label {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.example-btn {
+  padding: 6px 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.example-btn:hover {
+  background: #dbeafe;
+}
+
+.demo-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.schema-box {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.schema-box summary {
+  cursor: pointer;
+  color: #2563eb;
+  font-size: 14px;
+}
+
+.schema-table {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.schema-rows {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.schema-columns {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #374151;
+  margin-top: 2px;
+}
+
+.site-footer {
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 13px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.site-footer a {
+  color: #2563eb;
+}

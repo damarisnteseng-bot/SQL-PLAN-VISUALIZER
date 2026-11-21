@@ -2,6 +2,20 @@ import { useState } from 'react'
 import './App.css'
 
 const API_URL = 'https://sql-plan-visualizer-nwcr.vercel.app'
+const REPO_URL = 'https://github.com/damarisnteseng-bot/SQL-PLAN-VISUALIZER'
+
+const EXAMPLES = [
+  { label: "Slow: full table scan", sql: "SELECT * FROM orders WHERE order_status = 'pending'" },
+  { label: "Slow + index suggestion", sql: "SELECT * FROM order_items WHERE quantity > 4" },
+  { label: "Fast: stops early", sql: "SELECT order_id FROM orders LIMIT 10" }
+]
+
+const TABLES = [
+  { name: "customers", columns: "customer_id, full_name, email, city, country, created_at", rows: "about 6,000 rows" },
+  { name: "products", columns: "product_id, product_name, category, price", rows: "about 250 rows" },
+  { name: "orders", columns: "order_id, customer_id, order_status, order_date", rows: "100,000 rows" },
+  { name: "order_items", columns: "order_item_id, order_id, product_id, quantity, unit_price", rows: "100,000 rows" }
+]
 
 function severityColor(severity) {
   if (severity === 'high') return '#dc2626'
@@ -65,6 +79,15 @@ function App() {
         Paste a query, see how Postgres actually executes it, and get suggested fixes.
       </p>
 
+      <div className="examples">
+        <span className="examples-label">Try an example:</span>
+        {EXAMPLES.map((ex) => (
+          <button key={ex.label} className="example-btn" onClick={() => setSql(ex.sql)}>
+            {ex.label}
+          </button>
+        ))}
+      </div>
+
       <textarea
         className="sql-input"
         value={sql}
@@ -76,6 +99,20 @@ function App() {
       <button onClick={handleAnalyze} disabled={loading} className="analyze-btn">
         {loading ? (<><span className="spinner"></span>Analyzing...</>) : "Analyze Query"}
       </button>
+
+      <p className="demo-note">
+        This demo accepts a single SELECT query and runs on a read-only database. The first request can take a few seconds to wake up.
+      </p>
+
+      <details className="schema-box">
+        <summary>What tables can I query?</summary>
+        {TABLES.map((t) => (
+          <div key={t.name} className="schema-table">
+            <strong>{t.name}</strong> <span className="schema-rows">({t.rows})</span>
+            <div className="schema-columns">{t.columns}</div>
+          </div>
+        ))}
+      </details>
 
       {error && (
         <div className="error-box">
@@ -113,11 +150,11 @@ function App() {
           <h2>Issues Found ({result.issues.length})</h2>
           {result.issues.length === 0 && (
             <p className="no-issues">
-              ✓ No issues detected.
+              No issues detected.
               {summary.indexName
                 ? ` Query used index "${summary.indexName}" efficiently.`
                 : summary.nodeType === 'Seq Scan'
-                ? ' Full table scan — acceptable if no filter was applied.'
+                ? ' Full table scan, which is acceptable if no filter was applied.'
                 : ' This query looks efficient.'}
             </p>
           )}
@@ -148,6 +185,11 @@ function App() {
           </details>
         </div>
       )}
+
+      <footer className="site-footer">
+        Built by Damaris Nteseng ·{' '}
+        <a href={REPO_URL} target="_blank" rel="noreferrer">View the code on GitHub</a>
+      </footer>
     </div>
   )
 }
