@@ -45,7 +45,7 @@ That's a ~110x speedup from a single index the tool suggested automatically.
 
 | Layer | Technology | Why |
 |---|---|---|
-| Database | PostgreSQL 16 (Docker) | Industry standard, excellent EXPLAIN ANALYZE JSON output |
+| Database | PostgreSQL 16 (Docker locally, Neon hosted) | Industry standard, excellent EXPLAIN ANALYZE JSON output |
 | Backend | Python + FastAPI | Fast to write, clean async API, great for JSON-heavy work |
 | Frontend | React + Vite | Modern, fast dev experience, component-based UI |
 | Data generation | Python + Faker | Realistic seed data at scale (700K+ rows locally, 200K+ rows on the hosted demo) |
@@ -66,6 +66,29 @@ That's a ~110x speedup from a single index the tool suggested automatically.
 ---
 
 ## Project Structure
+
+```
+sql-plan-visualizer/
+├── backend/
+│   ├── app/
+│   │   ├── main.py              # FastAPI endpoints and query validation
+│   │   ├── db.py                # Database connection
+│   │   └── analyzer/
+│   │       └── rules.py         # Anti-pattern detection and index suggestions
+│   ├── tests/
+│   │   └── test_rules.py        # Unit tests
+│   └── requirements.txt
+├── frontend/
+│   └── src/
+│       ├── App.jsx              # React interface
+│       └── App.css              # Styling
+├── seed-data/
+│   ├── schema.sql               # Database schema (4 tables)
+│   └── generate_data.py         # Faker-based data generator
+├── docs/screenshots/            # Before/after screenshots
+└── docker-compose.yml           # Local PostgreSQL container
+```
+
 ---
 
 ## Running Locally
@@ -129,17 +152,33 @@ PostgreSQL estimates row counts for the full result set, but LIMIT cuts executio
 - Replace the regex-based column extractor with a proper SQL parser like sqlglot
 - Add a side-by-side plan comparison view (before/after applying a suggested index)
 - Support saving and replaying query history
-- Deploy with proper secrets management (credentials are currently hardcoded for local dev only)
+- Use a dedicated secrets manager. The hosted demo already reads its database URL from an environment variable and connects as a read-only user; only the local development fallback in `db.py` has a hardcoded password
+- Check how selective a filter is before suggesting an index. Today a column with few distinct values, such as `order_status`, is flagged even though an index may not help
+- Multiply by the loop count for parallel plans, so large parallel scans are not under-reported
+- Support databases other than PostgreSQL
+- Draw the plan as an interactive tree. Today results are shown as summary cards and raw JSON
 
 ---
 
-*Built by Damaris Nteseng — Software Development student, Pretoria, South Africa*
+
 
 ## Live Demo
 
 **Frontend:** https://sql-plan-visualizer-blond.vercel.app
 
 **API:** https://sql-plan-visualizer-nwcr.vercel.app
+
+### Try it yourself
+
+The page has three example buttons:
+
+- **Slow: full table scan** runs `SELECT * FROM orders WHERE order_status = 'pending'`. The tool flags a sequential scan that discards most of the rows it reads.
+- **Slow + index suggestion** runs `SELECT * FROM order_items WHERE quantity > 4`. The tool flags the scan and generates a `CREATE INDEX` statement you can copy.
+- **Fast: stops early** runs `SELECT order_id FROM orders LIMIT 10`. The tool reports no issues, because a LIMIT ends the scan early.
+
+### Safety
+
+The hosted demo only accepts a single SELECT statement. It connects to the database as a read-only user with a 5-second statement timeout, so queries cannot change data or run for long.
 
 ## Running the Tests
 
@@ -160,3 +199,7 @@ All 7 tests pass, covering:
 - Backend: FastAPI on Vercel (serverless), so the first request after a quiet period may take a few seconds (cold start)
 - Database: PostgreSQL on Neon, seeded with 100,000 orders and 100,000 order items
 - Local development: run the database with Docker Compose, and point `API_URL` in `frontend/src/App.jsx` at `http://127.0.0.1:8000`
+
+---
+
+*Built by Damaris Nteseng — Software Development student, Pretoria, South Africa*
