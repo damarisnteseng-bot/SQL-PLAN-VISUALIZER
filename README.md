@@ -93,6 +93,8 @@ sql-plan-visualizer/
 
 ## Running Locally
 
+The hosted demo needs no setup. To run everything on your own machine:
+
 ### Prerequisites
 - Docker Desktop
 - Python 3.11+
@@ -100,33 +102,46 @@ sql-plan-visualizer/
 
 ### Steps
 
+Run steps 1 to 3 from the project root.
+
 **1. Start the database**
 ```bash
 docker compose up -d
 ```
 
-**2. Set up and start the backend**
+**2. Create the Python environment and install packages**
 ```bash
-cd backend
 python3 -m venv venv
 source venv/bin/activate
-pip install fastapi uvicorn psycopg2-binary faker
-uvicorn app.main:app --reload
+pip install -r backend/requirements.txt
 ```
 
-**3. Seed the database (first time only)**
+**3. Create the tables and seed the data (first time only)**
 ```bash
+docker exec -i sql-viz-postgres psql -U visualizer -d planviz < seed-data/schema.sql
 python3 seed-data/generate_data.py
 ```
+This takes a few minutes and creates about 700K rows. Running `schema.sql` again deletes the existing data.
 
-**4. Start the frontend**
+**4. Start the backend**
+```bash
+cd backend
+uvicorn app.main:app --reload
+```
+Leave this terminal running. The API listens on http://127.0.0.1:8000.
+
+**5. Point the frontend at your local backend**
+
+In `frontend/src/App.jsx`, change the `API_URL` line to `http://127.0.0.1:8000`. It points at the hosted backend by default.
+
+**6. Start the frontend (in a new terminal)**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+Open the address it prints, usually http://localhost:5173.
 
-**5. Open in browser**
 ---
 
 ## Key Technical Decisions and Tradeoffs
